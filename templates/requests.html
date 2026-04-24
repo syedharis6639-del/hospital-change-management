@@ -1,0 +1,66 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<h2 style="font-size: 1.875rem; font-weight: 700; color: white; margin: 0 0 2rem 0; text-transform: uppercase;">Change Approvals</h2>
+
+{% if requests|length == 0 %}
+    <div style="background-color: rgba(255, 255, 255, 0.02); border: 2px dashed var(--color-border-color); border-radius: 1.5rem; padding: 4rem; text-align: center;">
+        <i data-lucide="clipboard-list" style="width: 48px; height: 48px; color: var(--color-border-color); margin-bottom: 1rem;"></i>
+        <p style="color: var(--color-text-muted); font-size: 0.875rem;">No pending change requests.</p>
+    </div>
+{% else %}
+    <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 1.5rem;">
+        {% for req in requests %}
+            <div class="panel" style="display: flex; flex-direction: column; height: 100%;">
+                <div class="panel-header">
+                    <div style="display: flex; align-items: center; gap: 0.75rem;">
+                        <div style="padding: 0.5rem; background-color: rgba(245, 158, 11, 0.1); border-radius: 0.5rem; color: #f59e0b;">
+                            <i data-lucide="history" style="width: 16px; height: 16px;"></i>
+                        </div>
+                        <span style="font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em;">{{ req.patient_name }}</span>
+                    </div>
+                    <div class="status-pill status-pending" style="font-size: 8px;">Review Required</div>
+                </div>
+
+                <div style="padding: 1.5rem; flex: 1;">
+                    <div style="font-size: 10px; color: var(--color-text-muted); margin-bottom: 1.25rem; line-height: 1.6;">
+                        <strong>REQ-ID:</strong> #{{ "%05d"|format(req.id) }} <br>
+                        <strong>Patient:</strong> {{ req.patient_name }} <br>
+                        <strong>Requested BY:</strong> {{ req.requested_by_name }}
+                    </div>
+
+                    <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+                        <div class="diff-box">
+                            <div style="font-size: 9px; font-weight: 700; text-transform: uppercase; color: var(--color-text-muted); margin-bottom: 0.25rem;">Current Value ({{ req.field }})</div>
+                            <div style="font-family: monospace; font-size: 12px; color: var(--color-danger);">{{ req.old_value }}</div>
+                        </div>
+                        <div class="diff-box diff-box-new">
+                            <div style="font-size: 9px; font-weight: 700; text-transform: uppercase; color: var(--color-text-muted); margin-bottom: 0.25rem;">Proposed Value ({{ req.field }})</div>
+                            <div style="font-family: monospace; font-size: 12px; color: var(--color-primary); font-weight: 700;">{{ req.new_value }}</div>
+                        </div>
+                    </div>
+                </div>
+
+                {% if user.role == 'Admin' %}
+                    <div style="padding: 1rem 1.5rem; border-top: 1px solid var(--color-border-color); background-color: rgba(15, 23, 42, 0.3); display: flex; gap: 0.75rem;">
+                        <form action="{{ url_for('request_action', id=req.id) }}" method="POST" style="flex: 1;">
+                            <input type="hidden" name="action" value="Reject">
+                            <button type="submit" class="btn" style="width: 100%; justify-content: center; background-color: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.2); color: var(--color-danger); font-size: 11px;">
+                                <i data-lucide="x-circle" style="width: 14px; height: 14px;"></i>
+                                Reject
+                            </button>
+                        </form>
+                        <form action="{{ url_for('request_action', id=req.id) }}" method="POST" style="flex: 1;">
+                            <input type="hidden" name="action" value="Approve">
+                            <button type="submit" class="btn btn-primary" style="width: 100%; justify-content: center; font-size: 11px;">
+                                <i data-lucide="check-circle-2" style="width: 14px; height: 14px;"></i>
+                                Approve
+                            </button>
+                        </form>
+                    </div>
+                {% endif %}
+            </div>
+        {% endfor %}
+    </div>
+{% endif %}
+{% endblock %}

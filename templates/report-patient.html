@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Medical Report - {{ patient.name }}</title>
+    <style>
+        :root {
+            --medical-blue: #0f172a;
+            --text-main: #1e293b;
+            --text-muted: #64748b;
+            --border: #e2e8f0;
+        }
+        @media print {
+            .no-print { display: none !important; }
+            body { padding: 0 !important; }
+            @page { margin: 1cm; }
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            color: var(--text-main);
+            line-height: 1.5;
+            padding: 40px;
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+        }
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            border-bottom: 2px solid var(--medical-blue);
+            padding-bottom: 20px;
+            margin-bottom: 30px;
+        }
+        .hospital-brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .logo-box {
+            width: 32px;
+            height: 32px;
+            background-color: var(--medical-blue);
+            border-radius: 4px;
+        }
+        .title {
+            text-transform: uppercase;
+            font-weight: 800;
+            font-size: 24px;
+            margin: 0;
+            color: var(--medical-blue);
+        }
+        .patient-summary {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+            background: #f8fafc;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 30px;
+            border: 1px solid var(--border);
+        }
+        .meta-group label {
+            display: block;
+            font-size: 10px;
+            text-transform: uppercase;
+            color: var(--text-muted);
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+        .meta-group div {
+            font-weight: 600;
+            font-size: 14px;
+        }
+        .history-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        .history-table th {
+            text-align: left;
+            background: #f1f5f9;
+            padding: 12px;
+            font-size: 11px;
+            text-transform: uppercase;
+            border-bottom: 2px solid var(--border);
+        }
+        .history-table td {
+            padding: 12px;
+            font-size: 12px;
+            border-bottom: 1px solid var(--border);
+            vertical-align: top;
+        }
+        .diff-box {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+        .val-prior { color: #dc2626; font-family: monospace; }
+        .val-new { color: #059669; font-weight: 700; font-family: monospace; }
+        .footer {
+            margin-top: 50px;
+            padding-top: 20px;
+            border-top: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            font-size: 10px;
+            color: var(--text-muted);
+        }
+        .btn-print {
+            background: var(--medical-blue);
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 6px;
+            font-weight: 700;
+            cursor: pointer;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="no-print" style="text-align: right;">
+        <button onclick="window.print()" class="btn-print">Confirm and Save as PDF</button>
+    </div>
+
+    <div class="header">
+        <div class="hospital-brand">
+            <div class="logo-box"></div>
+            <div>
+                <h1 class="title">MediFlow</h1>
+                <div style="font-size: 10px; color: var(--text-muted); font-weight: 600; letter-spacing: 0.1em;">MEDICAL CENTER REPORT</div>
+            </div>
+        </div>
+        <div style="text-align: right;">
+            <div style="font-size: 12px; font-weight: 700;">Document Ref: #MR-{{ patient.id }}-REF-{{ generatedAt[-6:] }}</div>
+            <div style="font-size: 10px; color: var(--text-muted);" id="gen-time">Generated: {{ generatedAt }}</div>
+        </div>
+    </div>
+
+    <div style="margin-bottom: 10px; font-weight: 800; font-size: 18px; color: var(--medical-blue);">Official Patient Audit Narrative</div>
+    
+    <div class="patient-summary">
+        <div class="meta-group">
+            <label>Legal Name</label>
+            <div>{{ patient.name }}</div>
+        </div>
+        <div class="meta-group">
+            <label>Patient ID</label>
+            <div style="font-family: monospace;">#{{ "%04d"|format(patient.id) }}</div>
+        </div>
+        <div class="meta-group">
+            <label>Age / DOB Ref</label>
+            <div>{{ patient.age }} Years</div>
+        </div>
+        <div class="meta-group">
+            <label>Medical Stability</label>
+            <div style="font-weight: 800; color: {{ '#dc2626' if patient.status == 'Critical' else ('#059669' if patient.status == 'Stable' else '#1e293b') }};">
+                {{ patient.status if patient.status else 'Stable' }}
+            </div>
+        </div>
+        <div class="meta-group" style="grid-column: span 2;">
+            <label>Current Diagnosis</label>
+            <div style="text-transform: capitalize;">{{ patient.diagnosis }}</div>
+        </div>
+    </div>
+
+    <div style="margin-bottom: 10px; font-weight: 700; font-size: 14px; text-transform: uppercase; color: var(--medical-blue);">Historical Modification Timeline</div>
+    
+    <table class="history-table">
+        <thead>
+            <tr>
+                <th style="width: 150px;">Date & Time</th>
+                <th>Operation</th>
+                <th>Field Change</th>
+                <th>Authorization</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for event in history %}
+                <tr>
+                    <td style="font-family: monospace; font-size: 11px;" class="local-time" data-utc="{{ event.created_at }}">
+                        {{ event.created_at }}
+                    </td>
+                    <td>
+                        <div style="font-weight: 700;">Data Modification</div>
+                        <div style="font-size: 10px; color: var(--text-muted); font-family: monospace;">UUID: {{ event.id }}</div>
+                    </td>
+                    <td>
+                        <div style="font-weight: 600; color: var(--medical-blue); margin-bottom: 6px;">[{{ event.field.toUpperCase() }}]</div>
+                        <div class="diff-box">
+                            <div class="val-prior">Prior: {{ event.old_value }}</div>
+                            <div class="val-new">New: {{ event.new_value }}</div>
+                        </div>
+                    </td>
+                    <td>
+                        <div style="font-weight: 600;">{{ event.reviewer_name if event.reviewer_name else 'System' }}</div>
+                        <div style="font-size: 10px; color: var(--text-muted);">Role: Administrator</div>
+                    </td>
+                </tr>
+            {% endfor %}
+
+            {% if creationLog %}
+                <tr style="background-color: #f8fafc;">
+                    <td style="font-family: monospace; font-size: 11px;" class="local-time" data-utc="{{ creationLog.timestamp }}">
+                        {{ creationLog.timestamp }}
+                    </td>
+                    <td>
+                        <div style="font-weight: 700;">Initial Registration</div>
+                    </td>
+                    <td colspan="2">
+                        <div style="color: var(--text-muted); font-size: 11px;">Record initialized by {{ creationLog.creator_name }}. No prior modifications.</div>
+                    </td>
+                </tr>
+            {% endif %}
+        </tbody>
+    </table>
+
+    <div class="footer">
+        <div>
+            This is an electronically generated medical history report. 
+            Digital Signature: SHA256-{{ generatedAt[-10:] }}
+        </div>
+        <div>Page 1 of 1</div>
+    </div>
+
+    <script>
+        // Localize time in the report
+        function localizeTime() {
+            document.querySelectorAll('[data-utc]').forEach(el => {
+                const date = new Date(el.getAttribute('data-utc'));
+                if (!isNaN(date.getTime())) {
+                    el.innerText = date.toLocaleDateString() + ' ' + date.toLocaleTimeString([], { hour12: true });
+                }
+            });
+            const genEl = document.getElementById('gen-time');
+            const genDate = new Date(genEl.innerText.replace('Generated: ', ''));
+            if (!isNaN(genDate.getTime())) {
+                genEl.innerText = 'Generated: ' + genDate.toLocaleDateString() + ' ' + genDate.toLocaleTimeString([], { hour12: true });
+            }
+        }
+        localizeTime();
+    </script>
+</body>
+</html>

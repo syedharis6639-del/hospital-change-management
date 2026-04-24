@@ -1,0 +1,66 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div style="max-width: 600px; margin: 0 auto;">
+    <div style="margin-bottom: 2rem;">
+        <h2 style="font-size: 1.875rem; font-weight: 700; color: white; margin: 0;">Change Request: {{ patient.name }}</h2>
+        <p style="color: var(--color-text-muted); margin: 0.5rem 0 0 0;">Propose a modification to this patient's critical health record.</p>
+    </div>
+
+    <div class="panel">
+        <form action="{{ url_for('edit_patient', id=patient.id) }}" method="POST" style="padding: 2rem; display: flex; flex-direction: column; gap: 1.5rem;">
+            {% if user.role != 'Admin' %}
+                <div style="padding: 1rem; background-color: rgba(245, 158, 11, 0.1); border: 1px solid rgba(245, 158, 11, 0.2); border-radius: 0.75rem; display: flex; gap: 0.75rem; align-items: flex-start;">
+                    <i data-lucide="info" style="width: 16px; height: 16px; color: #f59e0b; flex-shrink: 0; margin-top: 2px;"></i>
+                    <p style="font-size: 11px; color: #f59e0b; margin: 0; line-height: 1.5;">
+                        <strong>Authorization Required:</strong> As a {{ user.role }}, your changes will be logged as <strong>Pending</strong> and must be reviewed by an Administrator before the patient's record is updated.
+                    </p>
+                </div>
+            {% endif %}
+            <div class="form-group">
+                <label>Field to Modify</label>
+                <select name="field" class="form-input" id="field-select">
+                    <option value="name">Patient Name</option>
+                    <option value="age">Patient Age</option>
+                    <option value="diagnosis" selected>Diagnosis</option>
+                    <option value="status">Patient Status (Criticality)</option>
+                </select>
+            </div>
+
+            <div style="padding: 1.5rem; background-color: rgba(15, 23, 42, 0.5); border: 1px solid var(--color-border-color); border-radius: 0.75rem; display: flex; flex-direction: column; gap: 1rem;">
+                <div class="form-group" style="margin: 0;">
+                    <label>Current Value</label>
+                    <div style="font-family: monospace; font-size: 0.875rem; color: var(--color-danger); padding: 0.75rem; background-color: rgba(0,0,0,0.2); border-radius: 0.5rem;" id="current-value">
+                        {{ patient.diagnosis }}
+                    </div>
+                </div>
+                <div class="form-group" style="margin: 0;">
+                    <label>New Proposed Value</label>
+                    <input type="text" name="new_value" class="form-input" id="new-value-input" required value="{{ patient.diagnosis }}" style="border-color: var(--color-primary);">
+                </div>
+            </div>
+
+            <div style="display: flex; justify-content: flex-end; gap: 1rem; border-top: 1px solid var(--color-border-color); padding-top: 1.5rem; margin-top: 0.5rem;">
+                <a href="{{ url_for('dashboard') }}" class="btn" style="color: var(--color-text-muted);">Cancel</a>
+                <button type="submit" class="btn btn-primary">
+                    <i data-lucide="check-circle-2" style="width: 16px; height: 16px;"></i>
+                    Submit Request
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    const patient = {{ patient|tojson }};
+    const select = document.getElementById('field-select');
+    const display = document.getElementById('current-value');
+    const input = document.getElementById('new-value-input');
+
+    select.addEventListener('change', (e) => {
+        const val = patient[e.target.value];
+        display.innerText = val;
+        input.value = val;
+    });
+</script>
+{% endblock %}

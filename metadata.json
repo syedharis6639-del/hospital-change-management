@@ -1,0 +1,6 @@
+{
+  "name": "Hospital Change Management System",
+  "description": "A secure, audit-ready hospital change management system for critical patient data records, featuring role-based access and approval workflows.",
+  "requestFramePermissions": [],
+  "majorCapabilities": []
+}

@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MediFlow - Hospital Change Management System</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body>
+    {% if user %}
+        <aside>
+            <div style="padding: 1.5rem; height: 64px; border-bottom: 1px solid var(--color-border-color); display: flex; align-items: center; gap: 0.75rem;">
+                <div style="width: 24px; height: 24px; background-color: var(--color-primary); border-radius: 4px;"></div>
+                <h1 style="font-weight: 700; font-size: 1.125rem; color: white; margin: 0;">MediFlow</h1>
+            </div>
+
+            <nav style="flex: 1; padding: 1rem 0;">
+                <a href="{{ url_for('dashboard') }}" class="nav-item {{ 'active' if currentPath == '/dashboard' else '' }}">
+                    <i data-lucide="users" style="width: 16px; height: 16px;"></i>
+                    <span>Patient Records</span>
+                </a>
+                
+                {% if user.role == 'Admin' %}
+                    <a href="{{ url_for('requests') }}" class="nav-item {{ 'active' if currentPath == '/requests' else '' }}">
+                        <i data-lucide="clipboard-list" style="width: 16px; height: 16px;"></i>
+                        <span>Change Management</span>
+                    </a>
+                    <a href="{{ url_for('audit') }}" class="nav-item {{ 'active' if currentPath == '/audit' else '' }}">
+                        <i data-lucide="history" style="width: 16px; height: 16px;"></i>
+                        <span>Audits log</span>
+                    </a>
+                {% endif %}
+                
+                {% if user.role == 'Admin' or user.role == 'Doctor' %}
+                    <a href="{{ url_for('history_list') }}" class="nav-item {{ 'active' if currentPath.startswith('/history') else '' }}">
+                        <i data-lucide="scroll-text" style="width: 16px; height: 16px;"></i>
+                        <span>History Timeline</span>
+                    </a>
+                {% endif %}
+            </nav>
+
+            <div style="padding: 1rem; border-top: 1px solid var(--color-border-color);">
+                <form action="{{ url_for('logout') }}" method="POST">
+                    <button type="submit" class="nav-item" style="justify-content: center; border: 1px solid var(--color-border-color); border-radius: 0.5rem; color: var(--color-text-muted);">
+                        <i data-lucide="log-out" style="width: 16px; height: 16px;"></i>
+                        <span>Sign Out</span>
+                    </button>
+                </form>
+            </div>
+        </aside>
+
+        <main>
+            <header>
+                <div style="font-weight: 600; font-size: 0.875rem;">Hospital Change Management System</div>
+                <div style="display: flex; align-items: center; gap: 0.75rem;">
+                    <div style="text-align: right;">
+                        <p style="font-size: 13px; font-weight: 600; color: white; margin: 0; line-height: 1.1;">{{ user.name }}</p>
+                        <p style="font-size: 10px; color: var(--color-text-muted); text-transform: uppercase; margin: 0;">Hospital System {{ user.role }}</p>
+                    </div>
+                    <div style="background-color: var(--color-accent-blue); padding: 2px 8px; border-radius: 4px; font-size: 10px; text-transform: uppercase; font-weight: 800; color: white;">
+                        {{ user.role }}
+                    </div>
+                </div>
+            </header>
+
+            <div class="content">
+                <div class="stats-grid">
+                    {% if user.role == 'Admin' %}
+                        <div class="stat-card">
+                            <div class="stat-label">Pending Reviews</div>
+                            <div class="stat-value" style="color: #eab308;">{{ stats.pending }}</div>
+                        </div>
+                    {% endif %}
+                    <div class="stat-card">
+                        <div class="stat-label">Total Patients</div>
+                        <div class="stat-value">{{ stats.patients }}</div>
+                    </div>
+                    {% if user.role == 'Admin' %}
+                        <div class="stat-card">
+                            <div class="stat-label">System Logs (24h)</div>
+                            <div class="stat-value" style="color: #0ea5e9;">{{ stats.logs24h }}</div>
+                        </div>
+                    {% endif %}
+                    <div class="stat-card">
+                        <div class="stat-label">System Performance</div>
+                        <div class="stat-value" style="color: #10b981;">{{ stats.health }}</div>
+                    </div>
+                </div>
+
+                {% block content %}{% endblock %}
+            </div>
+        </main>
+    {% else %}
+        {% block login_content %}{% endblock %}
+    {% endif %}
+
+    <script>
+        lucide.createIcons();
+
+        // Global function to format UTC timestamps to Local browser time
+        function formatLocalTimestamps() {
+            document.querySelectorAll('[data-utc]').forEach(el => {
+                const utcStr = el.getAttribute('data-utc');
+                if (!utcStr) return;
+                
+                const date = new Date(utcStr);
+                if (isNaN(date.getTime())) return;
+
+                const optionsDate = { year: 'numeric', month: '2-digit', day: '2-digit' };
+                const optionsTime = { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true };
+                
+                const dateStr = date.toLocaleDateString(undefined, optionsDate);
+                const timeStr = date.toLocaleTimeString(undefined, optionsTime);
+
+                if (el.classList.contains('timestamp-split')) {
+                    el.innerHTML = `<div style="font-weight: 700;">${dateStr}</div><div style="color: var(--color-text-muted); font-size: 10px;">${timeStr}</div>`;
+                } else if (el.classList.contains('timestamp-inline')) {
+                    el.innerText = `${dateStr} ${timeStr}`;
+                } else {
+                    el.innerText = `${dateStr} ${timeStr}`;
+                }
+            });
+        }
+        
+        document.addEventListener('DOMContentLoaded', formatLocalTimestamps);
+    </script>
+</body>
+</html>

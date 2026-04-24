@@ -1,0 +1,50 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 2rem;">
+    <div>
+        <h2 style="font-size: 1.875rem; font-weight: 700; color: white; margin: 0 0 0.25rem 0; text-transform: uppercase;">History Timeline</h2>
+        <p style="font-size: 0.75rem; color: var(--color-text-muted); display: flex; align-items: center; gap: 0.5rem; margin: 0;">
+            <i data-lucide="scroll-text" style="width: 12px; height: 12px; color: var(--color-primary);"></i>
+            Select a patient to view their comprehensive modification history.
+        </p>
+    </div>
+</div>
+
+<div class="panel">
+    <div class="panel-header">
+        <span style="font-size: 10px; font-weight: 700; color: var(--color-text-muted); text-transform: uppercase; letter-spacing: 0.1em;">Patient Directory</span>
+    </div>
+    <table>
+        <thead>
+            <tr>
+                <th>Patient ID</th>
+                <th>Full Name</th>
+                <th>Age</th>
+                <th style="text-align: right;">Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% if patients|length == 0 %}
+                <tr>
+                    <td colspan="4" style="text-align: center; padding: 3rem; color: var(--color-text-muted); font-style: italic;">No patient records available.</td>
+                </tr>
+            {% else %}
+                {% for p in patients %}
+                    <tr>
+                        <td style="font-family: monospace; font-size: 11px; color: var(--color-text-muted);">#{{ "%04d"|format(p.id) }}</td>
+                        <td style="font-weight: 700; color: white;">{{ p.name }}</td>
+                        <td style="color: var(--color-text-muted);">{{ p.age }}</td>
+                        <td style="text-align: right;">
+                            <a href="{{ url_for('patient_history', id=p.id) }}" class="btn btn-primary" style="padding: 0.5rem 1rem; font-size: 11px;">
+                                <i data-lucide="view" style="width: 14px; height: 14px;"></i>
+                                View Timeline
+                            </a>
+                        </td>
+                    </tr>
+                {% endfor %}
+            {% endif %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

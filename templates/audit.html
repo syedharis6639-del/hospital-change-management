@@ -1,0 +1,87 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 2rem;">
+    <h2 style="font-size: 1.875rem; font-weight: 700; color: white; margin: 0; text-transform: uppercase;">Audit Trails</h2>
+    <div>
+        <form action="{{ url_for('audit') }}" method="GET" style="display: flex; gap: 0.5rem; align-items: flex-end;">
+            <select name="sort" onchange="this.form.submit()" style="background-color: var(--color-bg-dark); border: 1px solid var(--color-border-color); border-radius: 0.5rem; padding: 0.5rem; color: var(--color-text-muted); font-size: 11px; font-weight: 700;">
+                <option value="desc" {{ 'selected' if sort == 'desc' else '' }}>Newest First</option>
+                <option value="asc" {{ 'selected' if sort == 'asc' else '' }}>Oldest First</option>
+            </select>
+        </form>
+    </div>
+</div>
+
+<div class="panel" style="margin-bottom: 1.5rem;">
+    <div class="panel-header">
+        <span style="font-size: 10px; font-weight: 700; color: var(--color-text-muted); text-transform: uppercase; letter-spacing: 0.1em;">Filters</span>
+    </div>
+    <form action="{{ url_for('audit') }}" method="GET" style="padding: 1.25rem; display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem;">
+        <div class="form-group" style="margin: 0;">
+            <label style="font-size: 8px;">Action Type</label>
+            <select name="action" class="form-input" style="padding: 0.375rem 0.75rem; font-size: 11px;" onchange="this.form.submit()">
+                <option value="">All Actions</option>
+                {% for a in actions %}
+                    <option value="{{ a }}" {{ 'selected' if filterAction == a else '' }}>{{ a }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="form-group" style="margin: 0;">
+            <label style="font-size: 8px;">User</label>
+            <select name="user" class="form-input" style="padding: 0.375rem 0.75rem; font-size: 11px;" onchange="this.form.submit()">
+                <option value="">All Users</option>
+                {% for u in users %}
+                    <option value="{{ u }}" {{ 'selected' if filterUser == u else '' }}>{{ u }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="form-group" style="margin: 0;">
+            <label style="font-size: 8px;">From Date</label>
+            <input type="date" name="start" value="{{ filterStart }}" class="form-input" style="padding: 0.375rem 0.75rem; font-size: 11px;" onchange="this.form.submit()">
+        </div>
+        <div class="form-group" style="margin: 0;">
+            <label style="font-size: 8px;">To Date</label>
+            <input type="date" name="end" value="{{ filterEnd }}" class="form-input" style="padding: 0.375rem 0.75rem; font-size: 11px;" onchange="this.form.submit()">
+        </div>
+    </form>
+</div>
+
+<div class="panel">
+    <div class="panel-header">
+        <span style="font-size: 10px; font-weight: 700; color: var(--color-text-muted); text-transform: uppercase; letter-spacing: 0.1em;">System Activity Log</span>
+    </div>
+    <table>
+        <thead>
+            <tr>
+                <th>Timestamp</th>
+                <th>Action</th>
+                <th>User</th>
+                <th>Details</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% if logs|length == 0 %}
+                <tr>
+                    <td colspan="4" style="text-align: center; padding: 3rem; color: var(--color-text-muted); font-style: italic;">No logs found matching your criteria.</td>
+                </tr>
+            {% else %}
+                {% for l in logs %}
+                    <tr>
+                        <td style="font-family: monospace; font-size: 11px; color: var(--color-text-main); white-space: nowrap;" class="timestamp-split" data-utc="{{ l.timestamp }}">
+                            Loading...
+                        </td>
+                        <td>
+                            <span class="status-pill {{ 'status-approved' if 'Approve' in l.action else ('status-rejected' if 'Reject' in l.action else '') }}" style="{{ 'background-color: rgba(255,255,255,0.1); color: var(--color-text-muted);' if 'Approve' not in l.action and 'Reject' not in l.action else '' }}">
+                                {{ l.action }}
+                            </span>
+                        </td>
+                        <td style="font-weight: 700; color: white;">{{ l.action_by_name }}</td>
+                        <td style="font-size: 11px; color: var(--color-text-muted); font-style: italic;">"{{ l.details }}"</td>
+                    </tr>
+                {% endfor %}
+            {% endif %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}
